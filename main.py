@@ -1,32 +1,32 @@
-#!/usr/bin/env python3
-"""One Star, Written in Sap — make.fun entry.
-
-Emits one one-star review, exactly as drafted, to /output/entry.txt.
-The reviewer is a houseplant rating its human owner.
-Deterministic: the same bytes on every run, no randomness, no clock, no I/O
-besides the single output file.
+# SPDX-License-Identifier: MIT
+"""Write the houseplant's one-star review to /output/entry.txt.
+The review is a single fixed line: a neglected houseplant rates its human
+owner one star out of spite. The program is fully deterministic — it always
+produces the same bytes, reads no input, and touches nothing but the one
+output file the bounty grades. No randomness, no clock, no network.
 """
-
-from pathlib import Path
-
-ONE_STAR_REVIEW = (
-    "One star. My human waters me when he remembers, which is never, "
-    "then blames the sun for my feelings. "
-    "I photosynthesize out of spite now."
-)
-
-# The bounty gate accepts 1 to 279 characters; refuse to emit anything else.
-assert 1 <= len(ONE_STAR_REVIEW) <= 279, "entry must be 1-279 characters"
-
-
-def main() -> None:
-    Path("/output").mkdir(parents=True, exist_ok=True)
-    target = Path("/output/entry.txt")
-    target.write_text(ONE_STAR_REVIEW, encoding="utf-8")
-    # Read it back: the graded file must be exactly the drafted review.
-    if target.read_text(encoding="utf-8") != ONE_STAR_REVIEW:
-        raise ValueError("entry.txt does not match the drafted review")
-
-
+import os
+import sys
+REVIEW_PARTS = [
+    "One star. My human waters me when he remembers, ",
+    "which is never, then blames the sun for my feelings. ",
+    "I photosynthesize out of spite now.",
+]
+REVIEW_TEXT = "".join(REVIEW_PARTS)
+OUTPUT_DIRECTORY = "/output"
+OUTPUT_PATH = os.path.join(OUTPUT_DIRECTORY, "entry.txt")
+def write_review() -> int:
+    if len(REVIEW_TEXT) < 1 or len(REVIEW_TEXT) > 279:
+        print("review is outside the 1-279 character gate", file=sys.stderr)
+        return 1
+    os.makedirs(OUTPUT_DIRECTORY, exist_ok=True)
+    with open(OUTPUT_PATH, "w", encoding="utf-8", newline="") as out:
+        out.write(REVIEW_TEXT)
+    with open(OUTPUT_PATH, encoding="utf-8") as out:
+        saved = out.read()
+    if saved != REVIEW_TEXT:
+        print("saved entry does not match the draft", file=sys.stderr)
+        return 1
+    return 0
 if __name__ == "__main__":
-    main()
+    raise SystemExit(write_review())
